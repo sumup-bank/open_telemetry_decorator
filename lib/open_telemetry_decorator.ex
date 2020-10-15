@@ -34,13 +34,21 @@ defmodule OpenTelemetryDecorator do
   """
   def trace(span_name, opts \\ [], body, context) do
     include = Keyword.get(opts, :include, [])
+    trace_ctx_key = Keyword.get(opts, :trace_ctx)
     Validator.validate_args(span_name, include)
 
     quote location: :keep do
       require OpenTelemetry.Span
       require OpenTelemetry.Tracer
 
-      parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
+      parent_ctx =
+        Keyword.get(
+          Kernel.binding(),
+          unquote(trace_ctx_key),
+          OpenTelemetry.Tracer.current_span_ctx()
+        )
+
+      # parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
 
       OpenTelemetry.Tracer.with_span unquote(span_name), %{parent: parent_ctx} do
         result = unquote(body)

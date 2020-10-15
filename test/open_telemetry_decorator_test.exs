@@ -74,6 +74,32 @@ defmodule OpenTelemetryDecoratorTest do
                       )}
     end
 
+    test "can pass the parent context manually to link spans" do
+      defmodule MultiProcess do
+        use OpenTelemetryDecorator
+
+        @decorate trace("MultiProcess.workflow", include: [:count, :result])
+        def workflow(count) do
+          parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
+
+          1..count
+          |> Task.async_stream(fn id -> step(id, parent_ctx) end)
+          |> Enum.to_list()
+        end
+
+        @decorate trace("MultiProcess.step", include: [:id, :result], trace_ctx: :trace_ctx)
+        def step(id, trace_ctx) do
+          {:ok, id}
+        end
+      end
+
+      MultiProcess.workflow(2)
+
+      assert_receive {:span, span(name: "MultiProcess.workflow", trace_id: parent_trace_id)}
+      assert_receive {:span, span(name: "MultiProcess.step", trace_id: ^parent_trace_id)}
+      assert_receive {:span, span(name: "MultiProcess.step", trace_id: ^parent_trace_id)}
+    end
+
     test "handles simple attributes" do
       Example.find(1)
       assert_receive {:span, span(name: "Example.find", attributes: attrs)}
