@@ -147,6 +147,9 @@ defmodule OpenTelemetryDecoratorTest do
 
       @decorate simple_trace("math.subtraction")
       def subtract(a, b), do: a - b
+
+      @decorate simple_trace("math.divide")
+      def divide(a, b), do: a / b
     end
 
     test "automatically adds inputs, outputs, and generates span name" do
@@ -161,6 +164,16 @@ defmodule OpenTelemetryDecoratorTest do
 
     test "span name can be specified" do
       Math.subtract(3, 2)
+
+      assert_receive {:span,
+                      span(
+                        name: "math.subtraction",
+                        attributes: [result: 1, a: 3, b: 2]
+                      )}
+    end
+
+    test "when erro, adds exception" do
+      Math.divide(3, 0)
 
       assert_receive {:span,
                       span(

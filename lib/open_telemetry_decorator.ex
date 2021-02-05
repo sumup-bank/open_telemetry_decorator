@@ -107,11 +107,18 @@ defmodule OpenTelemetryDecorator do
     quote location: :keep do
       require OpenTelemetry.Span
       require OpenTelemetry.Tracer
+      require OpenTelemetryDecorator.ErrorHandler
 
       parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
 
       OpenTelemetry.Tracer.with_span unquote(span_name), %{parent: parent_ctx} do
-        unquote(body)
+        try do
+          unquote(body)
+        catch
+          any ->
+            ErrorHandler.add_error(any)
+            raise any
+        end
       end
     end
   rescue
