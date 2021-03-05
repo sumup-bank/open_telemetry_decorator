@@ -109,8 +109,12 @@ defmodule OpenTelemetryDecorator do
       require OpenTelemetry.Tracer
 
       parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
+      request_id = case Logger.metadata() do
+        [request_id: value] -> value
+        _ -> nil
+      end
 
-      OpenTelemetry.Tracer.with_span unquote(span_name), %{parent: parent_ctx} do
+      OpenTelemetry.Tracer.with_span unquote(span_name), %{parent: parent_ctx, attributes: [request_id: request_id]} do
         unquote(body)
       end
     end
