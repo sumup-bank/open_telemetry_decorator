@@ -31,14 +31,14 @@ defmodule OpenTelemetryDecorator.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.5.1", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.6.6", only: [:dev, :test], runtime: false},
       {:decorator, "~> 1.4.0"},
-      {:dialyxir, "~> 1.1.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.2.0", only: :dev, runtime: false},
       {:ex_doc, "~> 0.25.3", only: :dev, runtime: false},
       {:excoveralls, "~> 0.14.0", only: :test, runtime: false},
-      {:opentelemetry, "~> 1.0.0-rc.3", only: :test},
-      {:opentelemetry_api, "~> 1.0.0-rc.3"},
-      {:opentelemetry_exporter, "~> 1.0.0-rc.3", only: :test}
+      {:opentelemetry, "~> 1.1.0", only: :test},
+      {:opentelemetry_api, "~> 1.1.0"},
+      {:opentelemetry_exporter, "~> 1.1.0", only: :test}
     ]
   end
 
