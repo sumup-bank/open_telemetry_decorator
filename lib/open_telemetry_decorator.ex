@@ -32,22 +32,6 @@ defmodule OpenTelemetryDecorator do
     end
   end
   ```
-
-  You can also provide a sampler that will override the globally configured one:
-
-  ```elixir
-  defmodule MyApp.Worker do
-    use OpenTelemetryDecorator
-
-    @sampler :ot_sampler.setup(:probability, %{probability: 0.5})
-
-    @decorate trace("my_app.worker.do_work", sampler: @sampler, include: [:arg1, :arg2, :result])
-    def do_work(arg1, arg2) do
-      total = arg1.count + arg2.count
-      {:ok, total}
-    end
-  end
-  ```
   """
   def trace(span_name, opts \\ [], body, context) do
     include = Keyword.get(opts, :include, [])
@@ -58,9 +42,7 @@ defmodule OpenTelemetryDecorator do
       require OpenTelemetry.Tracer
       require OpenTelemetryDecorator
 
-      span_args = SpanArgs.new(unquote(opts))
-
-      OpenTelemetry.Tracer.with_span unquote(span_name), span_args do
+      OpenTelemetry.Tracer.with_span unquote(span_name) do
         span_ctx = OpenTelemetry.Tracer.current_span_ctx()
         result = unquote(body)
 
@@ -80,17 +62,14 @@ defmodule OpenTelemetryDecorator do
   @doc """
   Decorate a function to add an OpenTelemetry trace with a named span. The input parameters and result are automatically added to the span attributes.
   You can specify a span name or one will be generated based on the module name, function name, and arity.
-
   ```elixir
   defmodule MyApp.Worker do
     use OpenTelemetryDecorator
-
     @decorate simple_trace()
     def do_work(arg1, arg2) do
       total = arg1.count + arg2.count
       {:ok, total}
     end
-
     @decorate simple_trace("worker.do_more_work")
     def handle_call({:do_more_work, args}, _from, state) do
       {:reply, {:ok, args}, state}
@@ -111,12 +90,17 @@ defmodule OpenTelemetryDecorator do
       require OpenTelemetryDecorator
 
       parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
-      attributes = case Logger.metadata() do
-        [request_id: value] -> [request_id: value]
-        _ -> []
-      end
 
-      OpenTelemetry.Tracer.with_span unquote(span_name), %{parent: parent_ctx, attributes: attributes} do
+      attributes =
+        case Logger.metadata() do
+          [request_id: value] -> [request_id: value]
+          _ -> []
+        end
+
+      OpenTelemetry.Tracer.with_span unquote(span_name), %{
+        parent: parent_ctx,
+        attributes: attributes
+      } do
         unquote(body) |> OpenTelemetryDecorator.treat_result()
       end
     end
@@ -138,10 +122,12 @@ defmodule OpenTelemetryDecorator do
             OpenTelemetryDecorator.add_error()
             tuple
 
-          _any -> tuple
+          _any ->
+            tuple
         end
 
-      any -> any
+      any ->
+        any
     end
   end
 
