@@ -61,7 +61,6 @@ defmodule OpenTelemetryDecoratorTest do
       assert_receive {:span,
                       span(
                         name: "Example.workflow",
-
                         trace_id: parent_trace_id,
                         attributes: {:attributes, _, :infinity, _, %{count: 2}}
                       )}
@@ -83,43 +82,84 @@ defmodule OpenTelemetryDecoratorTest do
 
     test "handles simple attributes" do
       Example.find(1)
-      assert_receive {:span, span(name: "Example.find", attributes: {:attributes, _, :infinity, _, attrs})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
       assert Map.get(attrs, :id) == 1
     end
 
     test "handles nested attributes" do
       Example.find(1)
-      assert_receive {:span, span(name: "Example.find", attributes: {:attributes, _, :infinity, _, attrs})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
       assert Map.get(attrs, :user_name) == "my user"
     end
 
     test "handles handles underscored attributes" do
       Example.find(2)
-      assert_receive {:span, span(name: "Example.find", attributes: {:attributes, _, :infinity, _, attrs})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
       assert Map.get(attrs, :id) == 2
     end
 
     test "converts atoms to strings" do
       Example.step(:two)
-      assert_receive {:span, span(name: "Example.step", attributes: {:attributes, _, :infinity, _, attrs})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.step",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
       assert Map.get(attrs, :id) == "two"
     end
 
     test "does not include result unless asked for" do
       Example.numbers(1000)
-      assert_receive {:span, span(name: "Example.numbers", attributes: {:attributes, _, :infinity, _, attrs})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.numbers",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
       assert Map.has_key?(attrs, :result) == false
     end
 
     test "does not include variables not in scope when the function exists" do
       Example.find(098)
-      assert_receive {:span, span(name: "Example.find", attributes: {:attributes, _, :infinity, _, attrs})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
       assert Map.has_key?(attrs, :error) == false
     end
 
     test "does not include anything unless specified" do
       Example.no_include(include_me: "nope")
-      assert_receive {:span, span(name: "Example.no_include", attributes: {:attributes, _, :infinity, _, %{}})}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.no_include",
+                        attributes: {:attributes, _, :infinity, _, %{}}
+                      )}
     end
 
     test "treat span simple error" do
