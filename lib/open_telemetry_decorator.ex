@@ -137,7 +137,7 @@ defmodule OpenTelemetryDecorator do
   end
 
   def add_error() do
-    status = OpenTelemetry.status(:Error, "Error")
+    status = OpenTelemetry.status(:error, "Error")
     span_ctx = OpenTelemetry.Tracer.current_span_ctx()
     OpenTelemetry.Span.set_status(span_ctx, status)
   end

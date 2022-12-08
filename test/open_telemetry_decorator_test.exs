@@ -164,13 +164,13 @@ defmodule OpenTelemetryDecoratorTest do
 
     test "treat span simple error" do
       Example.bad_result()
-      expected_status = OpenTelemetry.status(:Error, "Error")
+      expected_status = OpenTelemetry.status(:error, "Error")
       assert_receive {:span, span(name: "bad_result", status: ^expected_status)}
     end
 
     test "treat span tuple error" do
       Example.bad_tuple_result()
-      expected_status = OpenTelemetry.status(:Error, "Error")
+      expected_status = OpenTelemetry.status(:error, "Error")
       assert_receive {:span, span(name: "bad_tuple_result", status: ^expected_status)}
     end
   end
@@ -212,7 +212,7 @@ defmodule OpenTelemetryDecoratorTest do
     test "span with error status" do
       Math.bad_subtract(3, 2)
 
-      expected_status = OpenTelemetry.status(:Error, "Error")
+      expected_status = OpenTelemetry.status(:error, "Error")
 
       assert_receive {:span,
                       span(
