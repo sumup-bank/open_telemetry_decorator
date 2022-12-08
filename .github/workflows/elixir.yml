@@ -66,7 +66,5 @@ jobs:
       - name: mix format
         run: |
           mix format --check-formatted --dry-run --check-equivalent
-      - name: mix credo
-        run: mix credo --strict
       - run: mix docs
       - run: mix dialyzer
