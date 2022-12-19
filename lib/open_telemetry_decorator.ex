@@ -32,22 +32,6 @@ defmodule OpenTelemetryDecorator do
     end
   end
   ```
-
-  You can also provide a sampler that will override the globally configured one:
-
-  ```elixir
-  defmodule MyApp.Worker do
-    use OpenTelemetryDecorator
-
-    @sampler :ot_sampler.setup(:probability, %{probability: 0.5})
-
-    @decorate trace("my_app.worker.do_work", sampler: @sampler, include: [:arg1, :arg2, :result])
-    def do_work(arg1, arg2) do
-      total = arg1.count + arg2.count
-      {:ok, total}
-    end
-  end
-  ```
   """
   def trace(span_name, opts \\ [], body, context) do
     include = Keyword.get(opts, :include, [])
@@ -111,12 +95,17 @@ defmodule OpenTelemetryDecorator do
       require OpenTelemetryDecorator
 
       parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
-      attributes = case Logger.metadata() do
-        [request_id: value] -> [request_id: value]
-        _ -> []
-      end
 
-      OpenTelemetry.Tracer.with_span unquote(span_name), %{parent: parent_ctx, attributes: attributes} do
+      attributes =
+        case Logger.metadata() do
+          [request_id: value] -> [request_id: value]
+          _ -> []
+        end
+
+      OpenTelemetry.Tracer.with_span unquote(span_name), %{
+        parent: parent_ctx,
+        attributes: attributes
+      } do
         unquote(body) |> OpenTelemetryDecorator.treat_result()
       end
     end
@@ -138,15 +127,17 @@ defmodule OpenTelemetryDecorator do
             OpenTelemetryDecorator.add_error()
             tuple
 
-          _any -> tuple
+          _any ->
+            tuple
         end
 
-      any -> any
+      any ->
+        any
     end
   end
 
   def add_error() do
-    status = OpenTelemetry.status(:Error, "Error")
+    status = OpenTelemetry.status(:error, "Error")
     span_ctx = OpenTelemetry.Tracer.current_span_ctx()
     OpenTelemetry.Span.set_status(span_ctx, status)
   end

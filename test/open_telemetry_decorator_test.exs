@@ -62,97 +62,116 @@ defmodule OpenTelemetryDecoratorTest do
                       span(
                         name: "Example.workflow",
                         trace_id: parent_trace_id,
-                        attributes: [result: [ok: 1, ok: 2], count: 2]
+                        attributes: {:attributes, _, :infinity, _, %{count: 2}}
                       )}
 
       assert_receive {:span,
                       span(
                         name: "Example.step",
                         trace_id: ^parent_trace_id,
-                        attributes: [result: {:ok, 1}, id: 1]
+                        attributes: {:attributes, _, :infinity, _, %{id: 1}}
                       )}
 
       assert_receive {:span,
                       span(
                         name: "Example.step",
                         trace_id: ^parent_trace_id,
-                        attributes: [result: {:ok, 2}, id: 2]
+                        attributes: {:attributes, _, :infinity, _, %{id: 2}}
                       )}
     end
 
     test "handles simple attributes" do
       Example.find(1)
-      assert_receive {:span, span(name: "Example.find", attributes: attrs)}
-      assert Keyword.fetch!(attrs, :id) == 1
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
+      assert Map.get(attrs, :id) == 1
     end
 
     test "handles nested attributes" do
       Example.find(1)
-      assert_receive {:span, span(name: "Example.find", attributes: attrs)}
-      assert Keyword.fetch!(attrs, :user_name) == "my user"
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
+      assert Map.get(attrs, :user_name) == "my user"
     end
 
     test "handles handles underscored attributes" do
       Example.find(2)
-      assert_receive {:span, span(name: "Example.find", attributes: attrs)}
-      assert Keyword.fetch!(attrs, :even) == "true"
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
+      assert Map.get(attrs, :id) == 2
     end
 
     test "converts atoms to strings" do
       Example.step(:two)
-      assert_receive {:span, span(name: "Example.step", attributes: attrs)}
-      assert Keyword.fetch!(attrs, :id) == "two"
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.step",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
+      assert Map.get(attrs, :id) == "two"
     end
 
     test "does not include result unless asked for" do
       Example.numbers(1000)
-      assert_receive {:span, span(name: "Example.numbers", attributes: attrs)}
-      assert Keyword.has_key?(attrs, :result) == false
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.numbers",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
+      assert Map.has_key?(attrs, :result) == false
     end
 
     test "does not include variables not in scope when the function exists" do
       Example.find(098)
-      assert_receive {:span, span(name: "Example.find", attributes: attrs)}
-      assert Keyword.has_key?(attrs, :error) == false
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.find",
+                        attributes: {:attributes, _, :infinity, _, attrs}
+                      )}
+
+      assert Map.has_key?(attrs, :error) == false
     end
 
     test "does not include anything unless specified" do
       Example.no_include(include_me: "nope")
-      assert_receive {:span, span(name: "Example.no_include", attributes: [])}
+
+      assert_receive {:span,
+                      span(
+                        name: "Example.no_include",
+                        attributes: {:attributes, _, :infinity, _, %{}}
+                      )}
     end
 
     test "treat span simple error" do
       Example.bad_result()
-      expected_status = OpenTelemetry.status(:Error, "Error")
+      expected_status = OpenTelemetry.status(:error, "Error")
       assert_receive {:span, span(name: "bad_result", status: ^expected_status)}
     end
 
     test "treat span tuple error" do
       Example.bad_tuple_result()
-      expected_status = OpenTelemetry.status(:Error, "Error")
+      expected_status = OpenTelemetry.status(:error, "Error")
       assert_receive {:span, span(name: "bad_tuple_result", status: ^expected_status)}
-    end
-
-    defmodule CustomSampler do
-      use OpenTelemetryDecorator
-
-      @always_on_sampler :otel_sampler.setup(:always_on, %{})
-
-      @always_off_sampler :otel_sampler.setup(:always_off, %{})
-
-      @decorate trace("feature_one", sampler: @always_on_sampler)
-      def feature_one, do: :ok
-
-      @decorate trace("feature_two", sampler: @always_off_sampler)
-      def feature_two, do: :ok
-    end
-
-    test "can override the default sampler for individual spans" do
-      CustomSampler.feature_one()
-      assert_receive {:span, span(name: "feature_one")}
-
-      CustomSampler.feature_two()
-      refute_receive {:span, _}
     end
   end
 
@@ -176,7 +195,7 @@ defmodule OpenTelemetryDecoratorTest do
       assert_receive {:span,
                       span(
                         name: "OpenTelemetryDecoratorTest.Math.add/2",
-                        attributes: []
+                        attributes: {:attributes, _, :infinity, _, %{}}
                       )}
     end
 
@@ -186,14 +205,14 @@ defmodule OpenTelemetryDecoratorTest do
       assert_receive {:span,
                       span(
                         name: "math.subtraction",
-                        attributes: []
+                        attributes: {:attributes, _, :infinity, _, %{}}
                       )}
     end
 
     test "span with error status" do
       Math.bad_subtract(3, 2)
 
-      expected_status = OpenTelemetry.status(:Error, "Error")
+      expected_status = OpenTelemetry.status(:error, "Error")
 
       assert_receive {:span,
                       span(
