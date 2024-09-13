@@ -12,8 +12,8 @@ defmodule OpenTelemetryDecorator do
   use Decorator.Define, with_span: 1, with_span: 2, trace: 1, trace: 2
 
   alias OpenTelemetryDecorator.Attributes
-  alias OpenTelemetryDecorator.Validator
   alias OpenTelemetryDecorator.SpanName
+  alias OpenTelemetryDecorator.Validator
 
   def trace(span_name, opts \\ [], body, context), do: with_span(span_name, opts, body, context)
 
@@ -161,7 +161,9 @@ defmodule OpenTelemetryDecorator do
         parent: parent_ctx,
         attributes: attributes
       } do
-        unquote(body) |> OpenTelemetryDecorator.treat_result()
+        unqouted_body = unquote(body)
+        OpenTelemetryDecorator.treat_result(unqouted_body)
+
       end
     end
   rescue
@@ -191,7 +193,7 @@ defmodule OpenTelemetryDecorator do
     end
   end
 
-  def add_error() do
+  def add_error do
     status = OpenTelemetry.status(:error, "Error")
     span_ctx = OpenTelemetry.Tracer.current_span_ctx()
     OpenTelemetry.Span.set_status(span_ctx, status)
