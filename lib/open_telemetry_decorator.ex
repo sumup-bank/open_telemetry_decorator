@@ -9,7 +9,13 @@ defmodule OpenTelemetryDecorator do
              # compensate for anchor id differences between ExDoc and GitHub
              |> (&Regex.replace(~r/\(\#\K(?=[a-z][a-z0-9-]+\))/, &1, "module-")).()
 
-  use Decorator.Define, with_span: 1, with_span: 2, trace: 1, trace: 2, simple_trace: 0, simple_trace: 1
+  use Decorator.Define,
+    with_span: 1,
+    with_span: 2,
+    trace: 1,
+    trace: 2,
+    simple_trace: 0,
+    simple_trace: 1
 
   alias OpenTelemetryDecorator.Attributes
   alias OpenTelemetryDecorator.SpanName
