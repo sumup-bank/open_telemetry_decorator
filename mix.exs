@@ -1,7 +1,7 @@
 defmodule OpenTelemetryDecorator.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "1.5.6"
   @github_page "https://github.com/marcdel/open_telemetry_decorator"
 
   def project do
@@ -11,10 +11,12 @@ defmodule OpenTelemetryDecorator.MixProject do
       name: "OpenTelemetryDecorator",
       description: "A function decorator for OpenTelemetry traces",
       homepage_url: @github_page,
-      elixir: "~> 1.10",
+      elixir: "~> 1.14.4",
+      elixirc_paths: elixirc_paths(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [coveralls: :test, "coveralls.html": :test, "coveralls.json": :test],
       start_permanent: Mix.env() == :prod,
+      consolidate_protocols: Mix.env() == :prod,
       package: package(),
       docs: docs(),
       deps: deps()
@@ -28,17 +30,22 @@ defmodule OpenTelemetryDecorator.MixProject do
     ]
   end
 
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.5.1", only: [:dev, :test], runtime: false},
-      {:decorator, "~> 1.4.0"},
-      {:dialyxir, "~> 1.1.0", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.25.3", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.14.0", only: :test, runtime: false},
-      {:opentelemetry, "~> 1.0.0", only: :test},
-      {:opentelemetry_api, "~> 1.0.0"},
-      {:opentelemetry_exporter, "~> 1.0.0", only: :test}
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:decorator, "~> 1.4"},
+      {:dialyxir, "~> 1.2", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.18.0", only: :test, runtime: false},
+      {:opentelemetry_exporter, "~> 1.7", only: :test},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry, "~> 1.4", only: :test, runtime: false},
+      {:o11y, "~> 0.2"}
     ]
   end
 

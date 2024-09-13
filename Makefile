@@ -13,16 +13,17 @@ TEST := $(shell find test -name \*.ex)
 
 check: _build/dev _build/test
 	mix test
-	mix credo
+	mix credo --strict
+	mix deps.unlock --check-unused
 	mix dialyzer
-	mix docs
 	mix format
+	mix docs
+	mix hex.outdated
 	@echo "OK"
 
 mix.lock deps: mix.exs
 	mix deps.get
-	mix deps.unlock --unused
-	mix deps.clean --unused
+	mix deps.unlock --check-unused
 	touch $@
 
 _build/dev: deps $(SOURCE)
