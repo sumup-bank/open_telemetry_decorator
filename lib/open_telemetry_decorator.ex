@@ -13,6 +13,7 @@ defmodule OpenTelemetryDecorator do
 
   alias OpenTelemetryDecorator.Attributes
   alias OpenTelemetryDecorator.Validator
+  alias OpenTelemetryDecorator.SpanName
 
   def trace(span_name, opts \\ [], body, context), do: with_span(span_name, opts, body, context)
 
@@ -147,7 +148,6 @@ defmodule OpenTelemetryDecorator do
     quote location: :keep do
       require OpenTelemetry.Span
       require OpenTelemetry.Tracer
-      require OpenTelemetryDecorator
 
       parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
 
