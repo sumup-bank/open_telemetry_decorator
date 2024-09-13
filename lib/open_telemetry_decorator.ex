@@ -163,7 +163,6 @@ defmodule OpenTelemetryDecorator do
       } do
         unqouted_body = unquote(body)
         OpenTelemetryDecorator.treat_result(unqouted_body)
-
       end
     end
   rescue
