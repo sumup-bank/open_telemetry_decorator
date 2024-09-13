@@ -11,7 +11,7 @@ defmodule OpenTelemetryDecorator.MixProject do
       name: "OpenTelemetryDecorator",
       description: "A function decorator for OpenTelemetry traces",
       homepage_url: @github_page,
-      elixir: "~> 1.14",
+      elixir: "~> 1.14.4",
       elixirc_paths: elixirc_paths(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [coveralls: :test, "coveralls.html": :test, "coveralls.json": :test],
