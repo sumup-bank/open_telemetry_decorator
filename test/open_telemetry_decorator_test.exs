@@ -413,4 +413,51 @@ defmodule OpenTelemetryDecoratorTest do
       assert parent_span.span_id == child_span.parent_span_id
     end
   end
+
+  describe "simple_trace" do
+    defmodule Math do
+      use OpenTelemetryDecorator
+
+      @decorate simple_trace()
+      def add(a, b), do: a + b
+
+      @decorate simple_trace("math.subtraction")
+      def subtract(a, b), do: a - b
+
+      @decorate simple_trace("math.bad_subtraction")
+      def bad_subtract(_a, _b), do: {:error, :bad_subtract}
+    end
+
+    test "generates span name" do
+      Math.add(2, 3)
+
+      assert_receive {:span,
+                      span(
+                        name: "OpenTelemetryDecoratorTest.Math.add/2",
+                        attributes: {:attributes, _, :infinity, _, %{}}
+                      )}
+    end
+
+    test "span name can be specified" do
+      Math.subtract(3, 2)
+
+      assert_receive {:span,
+                      span(
+                        name: "math.subtraction",
+                        attributes: {:attributes, _, :infinity, _, %{}}
+                      )}
+    end
+
+    test "span with error status" do
+      Math.bad_subtract(3, 2)
+
+      expected_status = OpenTelemetry.status(:error, "Error")
+
+      assert_receive {:span,
+                      span(
+                        name: "math.bad_subtraction",
+                        status: ^expected_status
+                      )}
+    end
+  end
 end
